@@ -45,26 +45,25 @@ async function sendQuery() {
   isLoading = true;
   document.getElementById('sendBtn').disabled = true;
 
-  try {
-    const res = await fetch(`${API}/ask`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, session_id: SESSION_ID }),
-    });
+try {
+  const res = await fetch(`/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, session_id: SESSION_ID }),
+  });
 
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-    const data = await res.json();
-    removeTyping(typingId);
-    appendMessage('agent', data.answer);
+  const data = await res.json();
+  removeTyping(typingId);
+  appendMessage('agent', data.answer);
 
-  } catch (err) {
-    removeTyping(typingId);
-    appendError('შეცდომა: ' + err.message + '\n\nდარწმუნდით რომ backend სერვერი გაშვებულია:\npython backend/main.py');
-  } finally {
-    isLoading = false;
-    document.getElementById('sendBtn').disabled = false;
-  }
+} catch (err) {
+  removeTyping(typingId);
+  appendError('შეცდომა: ' + err.message);
+} finally {
+  isLoading = false;
+  document.getElementById('sendBtn').disabled = false;
 }
 
 // ── Append message bubble ─────────────────────────────────────────────────
