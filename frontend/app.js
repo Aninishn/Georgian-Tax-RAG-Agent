@@ -65,6 +65,7 @@ try {
   isLoading = false;
   document.getElementById('sendBtn').disabled = false;
 }
+}
 
 // ── Append message bubble ─────────────────────────────────────────────────
 function appendMessage(role, text) {
