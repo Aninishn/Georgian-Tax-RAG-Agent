@@ -1,4 +1,4 @@
-const API = 'http://localhost:8000';
+const API = 'https://georgian-tax-rag-agent.onrender.com';
 const SESSION_ID = 'session_' + Math.random().toString(36).substr(2, 9);
 let isLoading = false;
 
