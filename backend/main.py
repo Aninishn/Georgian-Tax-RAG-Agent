@@ -63,16 +63,25 @@ def get_agent(session_id: str) -> GeorgianRAGAgent:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+# @app.get("/")
+# def root():
+#     return {
+#         "name": "Georgian RAG Agent",
+#         "description": "Answers tax and customs questions in Georgian",
+#         "source": SOURCE_URL,
+#         "docs": "/docs",
+#     }
+
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
 @app.get("/")
-def root():
-    return {
-        "name": "Georgian RAG Agent",
-        "description": "Answers tax and customs questions in Georgian",
-        "source": SOURCE_URL,
-        "docs": "/docs",
-    }
+async def serve_frontend():
+    return FileResponse("frontend/index.html")
 
-
+# 
 @app.get("/health")
 def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
