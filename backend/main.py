@@ -72,15 +72,20 @@ def get_agent(session_id: str) -> GeorgianRAGAgent:
 #         "docs": "/docs",
 #     }
 
+
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app = FastAPI()
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
+
+app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR), name="frontend")
 
 @app.get("/")
 async def serve_frontend():
-    return FileResponse("frontend/index.html")
-
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 # 
 @app.get("/health")
 def health():
