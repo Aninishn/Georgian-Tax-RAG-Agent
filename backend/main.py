@@ -75,11 +75,13 @@ def get_agent(session_id: str) -> GeorgianRAGAgent:
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-import os
+
+app = FastAPI()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
+# ეს აბსოლუტურად აუცილებელია CSS/JS-სთვის
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 @app.get("/")
