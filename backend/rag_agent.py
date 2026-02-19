@@ -71,7 +71,7 @@ class GeorgianRAGAgent:
             try:
                 response = self.client.chat.completions.create(
                     model="llama-3.1-8b-instant",
-                    max_tokens=2000,
+                    max_tokens=1000,
                     messages=messages,
                 )
                 break
