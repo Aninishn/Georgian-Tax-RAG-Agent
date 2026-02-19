@@ -1,6 +1,18 @@
 const API = 'https://georgian-tax-rag-agent.onrender.com';
 const SESSION_ID = 'session_' + Math.random().toString(36).substr(2, 9);
 let isLoading = false;
+let questionCount = parseInt(localStorage.getItem('questionCount') || '0');
+
+// ── Fun facts about Georgian tax system ──────────────────────────────────────
+const FUN_FACTS = [
+  "საქართველო მსოფლიოში ერთ-ერთი ყველაზე დაბალი გადასახადების ქვეყანაა — მხოლოდ 6 ძირითადი გადასახადი!",
+  "2017 წლიდან საქართველომ მიიღო ესტონური მოდელი — გაუნაწილებელი მოგება გადასახადით არ იბეგრება.",
+  "საქართველოს DCFTA შეთანხმება ევროკავშირთან 27 000-ზე მეტ პროდუქტზე ნულოვან ბაჟს ითვალისწინებს.",
+  "IT კომპანიები ვირტუალური ზონის სტატუსით საექსპორტო შემოსავლიდან გათავისუფლებულია გადასახადებისაგან.",
+  "მიკრო ბიზნესი 30 000 ლარამდე ბრუნვით სრულად გათავისუფლებულია საშემოსავლო გადასახადისაგან.",
+  "საქართველოს საბაჟო სამსახური ერთ-ერთი ყველაზე სწრაფია — საშუალოდ 3 საათში ათავისუფლებს საქონელს.",
+  "300 ლარამდე ფოსტით შემოტანილ საქონელზე არ გამოიყენება არც ბაჟი და არც დღგ.",
+];
 
 const SUGGESTED = [
   "საშემოსავლო გადასახადის განაკვეთი?",
@@ -13,20 +25,49 @@ const SUGGESTED = [
   "გადამხდელის უფლებები?",
 ];
 
-// ── Build suggested questions ─────────────────────────────────────────────
-const sc = document.getElementById('suggestedContainer');
-SUGGESTED.forEach(q => {
-  const btn = document.createElement('button');
-  btn.className = 'suggested-btn';
-  btn.textContent = q;
-  btn.onclick = () => {
-    document.getElementById('queryInput').value = q;
-    sendQuery();
-  };
-  sc.appendChild(btn);
-});
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+  // Build suggested buttons
+  const sc = document.getElementById('suggestedContainer');
+  SUGGESTED.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'suggested-btn';
+    btn.textContent = q;
+    btn.onclick = () => {
+      document.getElementById('queryInput').value = q;
+      sendQuery();
+    };
+    sc.appendChild(btn);
+  });
 
-// ── Send query ────────────────────────────────────────────────────────────
+  // Show rotating fun fact
+  rotateFunFact();
+
+  // Update counters
+  updateCounters();
+}
+
+function rotateFunFact() {
+  const el = document.getElementById('funFact');
+  if (!el) return;
+  let i = 0;
+  el.textContent = FUN_FACTS[i];
+  setInterval(() => {
+    el.style.opacity = '0';
+    setTimeout(() => {
+      i = (i + 1) % FUN_FACTS.length;
+      el.textContent = FUN_FACTS[i];
+      el.style.opacity = '1';
+    }, 400);
+  }, 5000);
+}
+
+function updateCounters() {
+  document.getElementById('statQuestions').textContent = questionCount;
+  document.getElementById('sidebarCount').textContent = questionCount;
+}
+
+// ── Send query ────────────────────────────────────────────────────────────────
 async function sendQuery() {
   if (isLoading) return;
 
@@ -45,32 +86,40 @@ async function sendQuery() {
   isLoading = true;
   document.getElementById('sendBtn').disabled = true;
 
-try {
-  const res = await fetch(`/ask`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, session_id: SESSION_ID }),
-  });
+  const startTime = Date.now();
 
-  if (!res.ok) throw new Error(`Server error: ${res.status}`);
+  try {
+    const res = await fetch(`${API}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, session_id: SESSION_ID }),
+    });
 
-  const data = await res.json();
-  removeTyping(typingId);
-  appendMessage('agent', data.answer);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-} catch (err) {
-  removeTyping(typingId);
-  appendError('შეცდომა: ' + err.message);
-} finally {
-  isLoading = false;
-  document.getElementById('sendBtn').disabled = false;
+    const data = await res.json();
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+    removeTyping(typingId);
+    appendAgentMessage(data.answer, data.sources, elapsed);
+
+    // Update question counter
+    questionCount++;
+    localStorage.setItem('questionCount', questionCount);
+    updateCounters();
+
+  } catch (err) {
+    removeTyping(typingId);
+    appendError('შეცდომა: ' + err.message + '\n\nდარწმუნდით რომ backend სერვერი გაშვებულია.');
+  } finally {
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+  }
 }
-}
 
-// ── Append message bubble ─────────────────────────────────────────────────
+// ── Append user message ───────────────────────────────────────────────────────
 function appendMessage(role, text) {
   const c = document.getElementById('messagesContainer');
-
   const div = document.createElement('div');
   div.className = `message ${role}`;
 
@@ -91,7 +140,88 @@ function appendMessage(role, text) {
   c.scrollTop = c.scrollHeight;
 }
 
-// ── Append error ──────────────────────────────────────────────────────────
+// ── Append agent message with extras ─────────────────────────────────────────
+function appendAgentMessage(text, sources, elapsed) {
+  const c = document.getElementById('messagesContainer');
+  const div = document.createElement('div');
+  div.className = 'message agent';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = '🤖';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+
+  // Format text
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/\n/g, '<br>');
+
+  bubble.innerHTML = formatted;
+
+  // Sources tags
+  if (sources && sources.length > 0) {
+    const sourcesDiv = document.createElement('div');
+    sourcesDiv.className = 'sources-used';
+    sources.forEach(s => {
+      const tag = document.createElement('span');
+      tag.className = 'source-tag';
+      tag.textContent = '📄 ' + s.title;
+      sourcesDiv.appendChild(tag);
+    });
+    bubble.appendChild(sourcesDiv);
+  }
+
+  // Meta row: time + copy button
+  const meta = document.createElement('div');
+  meta.className = 'response-meta';
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'response-time';
+  timeEl.textContent = `⚡ ${elapsed}წ-ში პასუხი`;
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.innerHTML = '📋 კოპირება';
+  copyBtn.onclick = () => copyText(text, copyBtn);
+
+  meta.appendChild(timeEl);
+  meta.appendChild(copyBtn);
+  bubble.appendChild(meta);
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+}
+
+// ── Copy to clipboard ─────────────────────────────────────────────────────────
+function copyText(text, btn) {
+  // Strip markdown
+  const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  navigator.clipboard.writeText(clean).then(() => {
+    btn.innerHTML = '✅ დაკოპირდა!';
+    btn.classList.add('copied');
+    showToast('პასუხი დაკოპირდა!');
+    setTimeout(() => {
+      btn.innerHTML = '📋 კოპირება';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ── Toast notification ────────────────────────────────────────────────────────
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// ── Error ─────────────────────────────────────────────────────────────────────
 function appendError(text) {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -102,7 +232,7 @@ function appendError(text) {
   c.scrollTop = c.scrollHeight;
 }
 
-// ── Typing indicator ──────────────────────────────────────────────────────
+// ── Typing indicator ──────────────────────────────────────────────────────────
 function showTyping() {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -116,12 +246,11 @@ function showTyping() {
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-  bubble.innerHTML = `
-    <div class="typing-indicator">
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-    </div>`;
+  bubble.innerHTML = `<div class="typing-indicator">
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  </div>`;
 
   div.appendChild(avatar);
   div.appendChild(bubble);
@@ -135,7 +264,7 @@ function removeTyping(id) {
   if (el) el.remove();
 }
 
-// ── Reset session ─────────────────────────────────────────────────────────
+// ── Reset session ─────────────────────────────────────────────────────────────
 async function resetSession() {
   await fetch(`${API}/reset`, {
     method: 'POST',
@@ -143,24 +272,27 @@ async function resetSession() {
     body: JSON.stringify({ session_id: SESSION_ID }),
   }).catch(() => {});
 
-  const c = document.getElementById('messagesContainer');
-  c.innerHTML = `
+  document.getElementById('messagesContainer').innerHTML = `
     <div class="welcome-state">
       <div class="welcome-icon">⚖️</div>
       <h3>საუბრის ისტორია გასუფთავდა</h3>
       <p>დასვით ახალი კითხვა.</p>
+      <div class="fun-fact" id="funFact"></div>
     </div>`;
+  rotateFunFact();
 }
 
-// ── Keyboard shortcut: Ctrl+Enter to send ────────────────────────────────
+// ── Keyboard shortcut ─────────────────────────────────────────────────────────
 document.getElementById('queryInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     sendQuery();
   }
-  // Auto-resize textarea
   setTimeout(() => {
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 130) + 'px';
   }, 0);
 });
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
