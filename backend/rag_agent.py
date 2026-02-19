@@ -75,16 +75,15 @@ class GeorgianRAGAgent:
 ხელმისაწვდომი კონტექსტი:
 {context}"""
 
-        messages = [{"role": "system", "content": system_prompt}] + \
-                   self.conversation_history + \
-                   [{"role": "user", "content": query}]
+        messages = [{"role": "system", "content": system_prompt},
+                   {"role": "user", "content": query}]
 
         # Retry logic for Groq rate limits
         for attempt in range(3):
             try:
                 response = self.client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    max_tokens=1500,
+                    max_tokens=800,
                     temperature=0.2,
                     messages=messages,
                 )
