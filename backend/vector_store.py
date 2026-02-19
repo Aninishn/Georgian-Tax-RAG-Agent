@@ -46,7 +46,7 @@ class SimpleVectorStore:
                     SearchResult(
                         id=doc["id"],
                         title=doc["title"],
-                        content=doc["content"],
+                        content=self._smart_trim(doc["content"]),
                         url=doc["url"],
                         relevance_score=min(score, 1.0),
                     )
@@ -65,7 +65,7 @@ class SimpleVectorStore:
             SearchResult(
                 id=doc["id"],
                 title=doc["title"],
-                content=doc["content"],
+                content=self._smart_trim(doc["content"]),
                 url=doc["url"],
                 relevance_score=0.1,
             )
@@ -75,3 +75,11 @@ class SimpleVectorStore:
     def _tokenize(self, text: str) -> List[str]:
         tokens = re.findall(r'\w+', text)
         return [t for t in tokens if len(t) > 2]
+
+
+    def _smart_trim(self, text: str, limit: int = 1200) -> str:
+        trimmed = text[:limit]
+        last_period = trimmed.rfind(".")
+        if last_period != -1:
+            return trimmed[:last_period + 1]
+        return trimmed
