@@ -84,7 +84,6 @@ class GeorgianRAGAgent:
             try:
                 response = self.client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    # model="gemma2-9b-it",
                     max_tokens=1500,
                     temperature=0.2,
                     messages=messages,
