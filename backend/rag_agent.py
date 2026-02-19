@@ -70,7 +70,7 @@ class GeorgianRAGAgent:
         for attempt in range(3):
             try:
                 response = self.client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
+                    model="llama-3.1-8b-instant",
                     max_tokens=2000,
                     messages=messages,
                 )
