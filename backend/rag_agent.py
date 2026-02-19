@@ -5,6 +5,7 @@ Uses Groq (free) instead of Anthropic
 """
 
 import os
+import time
 import logging
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
@@ -65,11 +66,21 @@ class GeorgianRAGAgent:
                    self.conversation_history + \
                    [{"role": "user", "content": query}]
 
-        response = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            max_tokens=2000,
-            messages=messages,
-        )
+        # Retry logic for Groq rate limits
+        for attempt in range(3):
+            try:
+                response = self.client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    max_tokens=2000,
+                    messages=messages,
+                )
+                break
+            except Exception as e:
+                logger.warning(f"Attempt {attempt + 1} failed: {e}")
+                if attempt < 2:
+                    time.sleep(2)
+                else:
+                    raise e
 
         answer = response.choices[0].message.content
         tokens = response.usage.total_tokens
