@@ -57,7 +57,7 @@ class GeorgianRAGAgent:
 
 პასუხის ბოლოში ᲧᲝᲕᲔᲚᲗᲕᲘᲡ დაამატე:
 ---
-📚 **წყარო:** [{SOURCE_NAME}]({SOURCE_URL})
+📚 **წყარო:** [საინფორმაციო-მეთოდოლოგიური ჰაბი](https://infohub.rs.ge/ka)
 
 ხელმისაწვდომი კონტექსტი:
 {context}"""
