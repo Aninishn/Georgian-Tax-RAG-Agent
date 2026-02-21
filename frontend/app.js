@@ -25,9 +25,8 @@ const SUGGESTED = [
   "გადამხდელის უფლებები?",
 ];
 
-// ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
-  // Build suggested buttons
+
   const sc = document.getElementById('suggestedContainer');
   SUGGESTED.forEach(q => {
     const btn = document.createElement('button');
@@ -40,10 +39,8 @@ function init() {
     sc.appendChild(btn);
   });
 
-  // Show rotating fun fact
   rotateFunFact();
 
-  // Update counters
   updateCounters();
 }
 
@@ -67,7 +64,6 @@ function updateCounters() {
   document.getElementById('sidebarCount').textContent = questionCount;
 }
 
-// ── Send query ────────────────────────────────────────────────────────────────
 async function sendQuery() {
   if (isLoading) return;
 
@@ -103,7 +99,6 @@ async function sendQuery() {
     removeTyping(typingId);
     appendAgentMessage(data.answer, data.sources, elapsed);
 
-    // Update question counter
     questionCount++;
     localStorage.setItem('questionCount', questionCount);
     updateCounters();
@@ -117,7 +112,6 @@ async function sendQuery() {
   }
 }
 
-// ── Append user message ───────────────────────────────────────────────────────
 function appendMessage(role, text) {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -140,7 +134,6 @@ function appendMessage(role, text) {
   c.scrollTop = c.scrollHeight;
 }
 
-// ── Append agent message with extras ─────────────────────────────────────────
 function appendAgentMessage(text, sources, elapsed) {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -153,7 +146,6 @@ function appendAgentMessage(text, sources, elapsed) {
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
 
-  // Format text
   const formatted = text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
@@ -161,7 +153,6 @@ function appendAgentMessage(text, sources, elapsed) {
 
   bubble.innerHTML = formatted;
 
-  // Sources tags
   if (sources && sources.length > 0) {
     const sourcesDiv = document.createElement('div');
     sourcesDiv.className = 'sources-used';
@@ -174,7 +165,6 @@ function appendAgentMessage(text, sources, elapsed) {
     bubble.appendChild(sourcesDiv);
   }
 
-  // Meta row: time + copy button
   const meta = document.createElement('div');
   meta.className = 'response-meta';
 
@@ -197,9 +187,7 @@ function appendAgentMessage(text, sources, elapsed) {
   c.scrollTop = c.scrollHeight;
 }
 
-// ── Copy to clipboard ─────────────────────────────────────────────────────────
 function copyText(text, btn) {
-  // Strip markdown
   const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
   navigator.clipboard.writeText(clean).then(() => {
     btn.innerHTML = '✅ დაკოპირდა!';
@@ -212,7 +200,6 @@ function copyText(text, btn) {
   });
 }
 
-// ── Toast notification ────────────────────────────────────────────────────────
 function showToast(msg) {
   const toast = document.createElement('div');
   toast.className = 'toast';
@@ -221,7 +208,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 2000);
 }
 
-// ── Error ─────────────────────────────────────────────────────────────────────
 function appendError(text) {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -232,7 +218,6 @@ function appendError(text) {
   c.scrollTop = c.scrollHeight;
 }
 
-// ── Typing indicator ──────────────────────────────────────────────────────────
 function showTyping() {
   const c = document.getElementById('messagesContainer');
   const div = document.createElement('div');
@@ -264,7 +249,6 @@ function removeTyping(id) {
   if (el) el.remove();
 }
 
-// ── Reset session ─────────────────────────────────────────────────────────────
 async function resetSession() {
   await fetch(`${API}/reset`, {
     method: 'POST',
@@ -282,7 +266,6 @@ async function resetSession() {
   rotateFunFact();
 }
 
-// ── Keyboard shortcut ─────────────────────────────────────────────────────────
 document.getElementById('queryInput').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
@@ -294,5 +277,4 @@ document.getElementById('queryInput').addEventListener('keydown', e => {
   }, 0);
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
 init();

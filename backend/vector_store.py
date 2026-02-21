@@ -1,8 +1,3 @@
-"""
-Vector Store - Simple keyword-based retrieval
-For production, replace with ChromaDB, Pinecone, or pgvector
-"""
-
 import re
 from typing import List
 from dataclasses import dataclass
@@ -18,11 +13,6 @@ class SearchResult:
 
 
 class SimpleVectorStore:
-    """
-    Lightweight keyword-based retrieval store.
-    No external dependencies needed.
-    Replace with a real vector DB for production use.
-    """
 
     def __init__(self, documents: List[dict]):
         self.documents = documents

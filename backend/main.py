@@ -1,7 +1,3 @@
-"""
-FastAPI Backend for Georgian RAG Agent
-"""
-
 import os
 import sys
 from datetime import datetime
@@ -9,11 +5,14 @@ from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from rag_agent import GeorgianRAGAgent
 from knowledge_base import SOURCE_URL, SOURCE_NAME, KNOWLEDGE_BASE
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 app = FastAPI(
     title="Georgian RAG Agent API",
@@ -29,11 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Session-based agents (one agent per session)
 agents: dict = {}
-
-
-# ── Pydantic Models ───────────────────────────────────────────────────────────
 
 class QueryRequest(BaseModel):
     query: str
@@ -53,28 +48,11 @@ class ResetRequest(BaseModel):
     session_id: Optional[str] = "default"
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
 def get_agent(session_id: str) -> GeorgianRAGAgent:
     if session_id not in agents:
         agents[session_id] = GeorgianRAGAgent()
     return agents[session_id]
 
-
-# ── Routes ────────────────────────────────────────────────────────────────────
-
-# @app.get("/")
-# def root():
-#     return {
-#         "name": "Georgian RAG Agent",
-#         "description": "Answers tax and customs questions in Georgian",
-#         "source": SOURCE_URL,
-#         "docs": "/docs",
-#     }
-
-
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
@@ -84,7 +62,7 @@ app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 @app.get("/")
 async def serve_frontend():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
-# 
+
 @app.get("/health")
 def health():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
@@ -100,7 +78,6 @@ def knowledge_base():
             for doc in KNOWLEDGE_BASE
         ],
     }
-
 
 @app.post("/ask", response_model=QueryResponse)
 def ask(request: QueryRequest):
@@ -124,7 +101,6 @@ def ask(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
 
-
 @app.post("/reset")
 def reset_session(request: ResetRequest):
     if request.session_id in agents:
@@ -132,24 +108,22 @@ def reset_session(request: ResetRequest):
         return {"message": "Session reset successfully", "session_id": request.session_id}
     return {"message": "Session not found", "session_id": request.session_id}
 
-
 @app.get("/suggested-questions")
 def suggested_questions():
     return {
         "questions": [
             "საშემოსავლო გადასახადის განაკვეთი რამდენია?",
-            "დღგ-ით რეგისტრაციის ვალდებულება როდის წარმოიშობა?",
+            "დღგ-ის გადამხდელად რეგისტრაციის ვალდებულება როდის წარმოიშობა?",
             "მოგების გადასახადის ესტონური მოდელი რა არის?",
             "ქონების გადასახადი როგორ გამოითვლება?",
-            "მცირე ბიზნესის სტატუსი რა პირობებია?",
-            "ავტომობილის შემოტანაზე საბაჟო გადასახადი?",
-            "ექსპორტზე დღგ-ის განაკვეთი?",
-            "გადასახადის გადამხდელის უფლებები რა არის?",
-            "ევროკავშირთან თავისუფალი ვაჭრობა?",
-            "ფოსტით შემოტანილ საქონელზე ბაჟი?",
+            "მცირე ბიზნესის სტატუსისთვის რა პირობებია საჭირო?",
+            "ავტომობილის შემოტანაზე საბაჟო გადასახადი რამდენია?",
+            "ექსპორტზე დღგ-ის განაკვეთი რამდენია?",
+            "გადასახადის გადამხდელს რა უფლებები აქვს?",
+            "საქართველოსა და ევროკავშირს შორის თავისუფალი ვაჭრობის შეთანხმება?",
+            "ფოსტით შემოტანილ საქონელზე საბაჟო გადასახადი?",
         ]
     }
-
 
 if __name__ == "__main__":
     import uvicorn

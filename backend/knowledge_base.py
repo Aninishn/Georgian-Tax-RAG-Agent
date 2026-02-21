@@ -1,8 +1,3 @@
-"""
-Knowledge Base - Documents from infohub.rs.ge
-Information and Methodological Hub (Tax and Customs Administration)
-"""
-
 SOURCE_URL = "https://infohub.rs.ge/ka"
 SOURCE_NAME = "საინფორმაციო-მეთოდოლოგიური ჰაბი (გადასახადებისა და საბაჟოს ადმინისტრირებასთან დაკავშირებული დოკუმენტები და ინფორმაცია ერთ სივრცეში)"
 SOURCE_NAME_EN = "Information and Methodological Hub (Tax and Customs Administration-related documents and information in one space)"
