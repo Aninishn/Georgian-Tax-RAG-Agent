@@ -3,7 +3,6 @@ const SESSION_ID = 'session_' + Math.random().toString(36).substr(2, 9);
 let isLoading = false;
 let questionCount = parseInt(localStorage.getItem('questionCount') || '0');
 
-// ── Fun facts about Georgian tax system ──────────────────────────────────────
 const FUN_FACTS = [
   "საქართველო მსოფლიოში ერთ-ერთი ყველაზე დაბალი გადასახადების ქვეყანაა — მხოლოდ 6 ძირითადი გადასახადი!",
   "2017 წლიდან საქართველომ მიიღო ესტონური მოდელი — გაუნაწილებელი მოგება გადასახადით არ იბეგრება.",
